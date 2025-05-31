@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="/css/dash.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-tasks"></i>
+                <span>Task Manager</span>
+            </div>
+            <ul class="nav-links">
+                <li class="active" onclick="filterTasks('pending')"><i class="fas fa-clock"></i> Pending</li>
+                <li onclick="filterTasks('in progress')"><i class="fas fa-spinner"></i> In Progress</li>
+                <li onclick="filterTasks('complete')"><i class="fas fa-check-circle"></i> Complete</li>
+            </ul>
+            <div class="logout">
+                <a href="/"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </nav>
+
+        <main class="content">
+            <header>
+                <h1>Wellocome to Task Management system, User</h1>
+            </header>
+
+            <div class="tasks-container">
+                <div class="tasks-header">
+                    <h2>📋 Your Tasks</h2>
+                    <button class="add-task-btn" onclick="toggleAddTaskForm()"><i class="fas fa-plus"></i> New Task</button>
+                </div>
+
+                <!-- Add Task Form -->
+                <form action="/tasks/create" method="POST" class="task-form" id="addTaskForm" style="display: none;">
+                    <div class="form-group">
+                        <input type="text" name="title" placeholder="Task Title" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea name="description" placeholder="Task Description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Due Date:</label>
+                        <input type="date" name="dueDate">
+                    </div>
+                    <input type="hidden" name="status" value="pending">
+                    <button type="submit" class="submit-btn">Add Task</button>
+                </form>
+
+                <div class="tasks-list" id="tasksList">
+                    <% tasks.forEach(task => { %>
+                        <div class="task-card <%= task.status %>" data-status="<%= task.status %>">
+                            <div class="task-header">
+                                <h3><%= task.title %></h3>
+                                <span class="status-badge"><%= task.status %></span>
+                            </div>
+                            <div class="task-due-date">
+                                <i class="far fa-calendar-alt"></i>
+                                <%= task.dueDate ? task.dueDate.toDateString() : 'No due date' %>
+                            </div>
+                            <div class="task-actions">
+                                <!-- Update Task Form -->
+                                <form action="/tasks/update/<%= task.id %>" method="POST">
+                                    <input type="text" name="title" value="<%= task.title %>" required>
+                                    <textarea name="description" placeholder="Description"><%= task.description %></textarea>
+                                    <input type="date" name="dueDate" value="<%= task.dueDate ? task.dueDate.toISOString().split('T')[0] : '' %>">
+                                    <select name="status" class="status-select">
+                                        <option value="pending" <%= task.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                                        <option value="in progress" <%= task.status === 'in progress' ? 'selected' : '' %>>In Progress</option>
+                                        <option value="complete" <%= task.status === 'complete' ? 'selected' : '' %>>Complete</option>
+                                    </select>
+                                    <button type="submit" class="update-btn"><i class="fas fa-save"></i> Update</button>
+                                </form>
+                                
+                                <!-- Delete Task -->
+                                <a href="/tasks/delete/<%= task.id %>" class="delete-btn"><i class="fas fa-trash"></i></a>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Function to toggle the Add Task form visibility
+        function toggleAddTaskForm() {
+            const form = document.getElementById('addTaskForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Function to filter tasks by status
+        function filterTasks(status) {
+            const tasks = document.querySelectorAll('.task-card');
+            const navLinks = document.querySelectorAll('.nav-links li');
+
+            // Update active nav link
+            navLinks.forEach(link => link.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            // Show/hide tasks based on status
+            tasks.forEach(task => {
+                if (status === 'all' || task.dataset.status === status) {
+                    task.style.display = 'block';
+                } else {
+                    task.style.display = 'none';
+                }
+            });
+        }
+
+        // Show pending tasks by default
+        document.addEventListener('DOMContentLoaded', () => {
+            filterTasks('pending');
+        });
+    </script>
+</body>
+</html>
